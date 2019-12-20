@@ -51,6 +51,7 @@ BPF_PROBE("raw_syscalls/", sys_enter, sys_enter_args)
 	if (!settings)
 		return 0;
 
+	settings->capture_enabled = 1;
 	if (!settings->capture_enabled)
 		return 0;
 
@@ -64,6 +65,9 @@ BPF_PROBE("raw_syscalls/", sys_enter, sys_enter_args)
 	} else {
 		evt_type = PPME_GENERIC_E;
 		drop_flags = UF_ALWAYS_DROP;
+	}
+	if (evt_type == 0) {
+		return 0;
 	}
 
 #ifdef BPF_SUPPORTS_RAW_TRACEPOINTS
