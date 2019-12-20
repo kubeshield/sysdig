@@ -1576,9 +1576,10 @@ enum autofill_paramtype {
 typedef int (*filler_callback) (struct event_filler_arguments *args);
 
 struct ppm_event_entry {
-	filler_callback filler_callback;
+//	filler_callback filler_callback;
 	enum ppm_filler_id filler_id;
-	uint16_t n_autofill_args;
+//	uint16_t n_autofill_args;
+	int n_autofill_args;
 	enum autofill_paramtype paramtype;
 	struct ppm_autofill_arg autofill_args[PPM_MAX_AUTOFILL_ARGS];
 } _packed;

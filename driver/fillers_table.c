@@ -17,9 +17,9 @@ or GPL2.txt for full copies of the license.
 #endif
 
 #ifdef __KERNEL__
-#define FILLER_REF(x) f_##x, PPM_FILLER_##x
+#define FILLER_REF(x) PPM_FILLER_##x
 #else
-#define FILLER_REF(x) 0, PPM_FILLER_##x
+#define FILLER_REF(x) PPM_FILLER_##x
 #endif /* __KERNEL__ */
 
 #define f_sys_socket_x f_sys_single_x
