@@ -3208,6 +3208,32 @@ FILLER(sys_socket_x, true)
 		}
 	}
 
+	const struct ppm_event_entry *evinfo;
+	int j;
+
+	evinfo = data->filler_info;
+
+#pragma unroll
+	for (j = 0; j < PPM_MAX_AUTOFILL_ARGS; j++) {
+		struct ppm_autofill_arg arg = evinfo->autofill_args[j];
+		unsigned long val;
+
+
+		if (j == evinfo->n_autofill_args)
+			break;
+
+		if (arg.id >= 0)
+			val = bpf_syscall_get_argument(data, arg.id);
+		else if (arg.id == AF_ID_RETVAL)
+			val = bpf_syscall_get_retval(data->ctx);
+		else if (arg.id == AF_ID_USEDEFAULT)
+			val = arg.default_val;
+
+		res = bpf_val_to_ring(data, val);
+		if (res != PPM_SUCCESS)
+			return res;
+	}
+
 	return res;
 }
 
