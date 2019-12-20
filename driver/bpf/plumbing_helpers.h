@@ -21,15 +21,15 @@ or GPL2.txt for full copies of the license.
 		    _val;					\
 		 })
 
-#ifdef BPF_DEBUG
+//#ifdef BPF_DEBUG
 #define bpf_printk(fmt, ...)					\
 	do {							\
 		char s[] = fmt;					\
 		bpf_trace_printk(s, sizeof(s), ##__VA_ARGS__);	\
 	} while (0)
-#else
-#define bpf_printk(fmt, ...)
-#endif
+//#else
+//#define bpf_printk(fmt, ...)
+//#endif
 
 #ifndef BPF_SUPPORTS_RAW_TRACEPOINTS
 static __always_inline int __stash_args(unsigned long long id,
