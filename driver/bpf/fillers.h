@@ -83,9 +83,9 @@ FILLER_RAW(terminate_filler)
 		++state->n_drops_pf;
 		break;
 	case PPM_FAILURE_BUG:
-		bpf_printk("PPM_FAILURE_BUG event=%d curarg=%d\n",
-			   state->tail_ctx.evt_type,
-			   state->tail_ctx.curarg);
+//		bpf_printk("PPM_FAILURE_BUG event=%d curarg=%d\n",
+//			   state->tail_ctx.evt_type,
+//			   state->tail_ctx.curarg);
 		++state->n_drops_bug;
 		break;
 	case PPM_SKIP_EVENT:
@@ -230,13 +230,18 @@ FILLER(sys_write_x, true)
 	if (res != PPM_SUCCESS)
 		return res;
 
+	bpf_printk("res: %d\n", res);
+
 	/*
 	 * data
 	 */
 	data->fd = bpf_syscall_get_argument(data, 0);
+	bpf_printk("fd: %d\n", data->fd);
 
 	val = bpf_syscall_get_argument(data, 1);
 	bufsize = bpf_syscall_get_argument(data, 2);
+
+	bpf_printk("bufsize: %d\n", bufsize);
 
 	res = __bpf_val_to_ring(data, val, bufsize, PT_BYTEBUF, -1, true);
 
@@ -842,9 +847,12 @@ FILLER(sys_connect_x, true)
 	 * in the stack, and therefore we can consume them.
 	 */
 	fd = bpf_syscall_get_argument(data, 0);
+	bpf_printk("fd: %d\n", fd);
 	if (fd >= 0) {
 		usrsockaddr = (struct sockaddr *)bpf_syscall_get_argument(data, 1);
 		val = bpf_syscall_get_argument(data, 2);
+
+//		bpf_printk("%s %d %d\n", usrsockaddr->sa_data, usrsockaddr->sa_family, val);
 
 		if (usrsockaddr && val != 0) {
 			/*
@@ -852,6 +860,7 @@ FILLER(sys_connect_x, true)
 			 */
 			err = bpf_addr_to_kernel(usrsockaddr, val,
 						 (struct sockaddr *)data->tmp_scratch);
+			bpf_printk("err: %d\n", err);
 			if (err >= 0) {
 				/*
 				 * Convert the fd into socket endpoint information
@@ -870,6 +879,7 @@ FILLER(sys_connect_x, true)
 	/*
 	 * Copy the endpoint info into the ring
 	 */
+	bpf_printk("size: %d\n", size);
 	data->curarg_already_on_frame = true;
 	res = bpf_val_to_ring_len(data, 0, size);
 
@@ -1314,6 +1324,7 @@ FILLER(sys_send_x, true)
 
 FILLER(sys_execve_e, true)
 {
+	bpf_printk("execve enter\n");
 	unsigned long val;
 	int res;
 
@@ -1323,6 +1334,7 @@ FILLER(sys_execve_e, true)
 	val = bpf_syscall_get_argument(data, 0);
 	res = bpf_val_to_ring(data, val);
 	if (res == PPM_FAILURE_INVALID_USER_MEMORY) {
+		bpf_printk("val_to_ring failure\n");
 		char na[] = "<NA>";
 
 		res = bpf_val_to_ring(data, (unsigned long)na);
@@ -2078,10 +2090,19 @@ FILLER(sys_accept_x, true)
 	unsigned long max_ack_backlog = 0;
 	unsigned long ack_backlog = 0;
 	unsigned long queuepct = 0;
+	unsigned long val;
 	struct socket *sock;
 	long size = 0;
 	int res;
 	int fd;
+
+//	// socket fd
+//	val = bpf_syscall_get_argument(data, 0);
+//	res = bpf_val_to_ring(data, val);
+//	bpf_printk("socket fd: %d %d\n", val, res);
+//	if (res != PPM_SUCCESS)
+//		return res;
+
 
 	/*
 	 * Retrieve the fd and push it to the ring.
@@ -2090,8 +2111,10 @@ FILLER(sys_accept_x, true)
 	 */
 	fd = bpf_syscall_get_retval(data->ctx);
 	res = bpf_val_to_ring_type(data, fd, PT_FD);
+	bpf_printk("fd: %d, res: %d\n", fd, res);
 	if (res != PPM_SUCCESS)
 		return res;
+
 
 	/*
 	 * Convert the fd into socket endpoint information
@@ -2104,8 +2127,10 @@ FILLER(sys_accept_x, true)
 	 */
 	data->curarg_already_on_frame = true;
 	res = __bpf_val_to_ring(data, 0, size, PT_SOCKTUPLE, -1, false);
+	bpf_printk("res: %d\n", res);
 	if (res != PPM_SUCCESS)
 		return res;
+
 
 	sock = bpf_sockfd_lookup(data, fd);
 	if (sock) {
@@ -3213,14 +3238,17 @@ FILLER(sys_socket_x, true)
 
 	evinfo = data->filler_info;
 
+//	bpf_printk("socket exit agrs: %d\n", evinfo->n_autofill_args);
 #pragma unroll
 	for (j = 0; j < PPM_MAX_AUTOFILL_ARGS; j++) {
 		struct ppm_autofill_arg arg = evinfo->autofill_args[j];
 		unsigned long val;
 
+//		bpf_printk("j: %d, total: %d\n", j, evinfo->n_autofill_args);
 
 		if (j == evinfo->n_autofill_args)
 			break;
+//		bpf_printk("argid: %d\n", arg.id);
 
 		if (arg.id >= 0)
 			val = bpf_syscall_get_argument(data, arg.id);
@@ -3228,6 +3256,7 @@ FILLER(sys_socket_x, true)
 			val = bpf_syscall_get_retval(data->ctx);
 		else if (arg.id == AF_ID_USEDEFAULT)
 			val = arg.default_val;
+//		bpf_printk("value: %d\n", val);
 
 		res = bpf_val_to_ring(data, val);
 		if (res != PPM_SUCCESS)

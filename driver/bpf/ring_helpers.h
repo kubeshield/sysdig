@@ -42,10 +42,10 @@ static __always_inline int push_evt_frame(void *ctx,
 					  struct filler_data *data)
 {
 	if (data->state->tail_ctx.curarg != data->evt->nparams) {
-		bpf_printk("corrupted filler for event type %d (added %u args, should have added %u)\n",
-			   data->state->tail_ctx.evt_type,
-			   data->state->tail_ctx.curarg,
-			   data->evt->nparams);
+//		bpf_printk("corrupted filler for event type %d (added %u args, should have added %u)\n",
+//			   data->state->tail_ctx.evt_type,
+//			   data->state->tail_ctx.curarg,
+//			   data->evt->nparams);
 		return PPM_FAILURE_BUG;
 	}
 

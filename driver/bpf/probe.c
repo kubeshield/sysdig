@@ -48,16 +48,21 @@ BPF_PROBE("raw_syscalls/", sys_enter, sys_enter_args)
 		return 0;
 
 	settings = get_bpf_settings();
-	if (!settings)
+	if (!settings) {
 		return 0;
+	}
 
 	settings->capture_enabled = 1;
-	if (!settings->capture_enabled)
+
+	if (!settings->capture_enabled) {
 		return 0;
+	}
 
 	sc_evt = get_syscall_info(id);
-	if (!sc_evt)
+	if (!sc_evt) {
+		bpf_printk("null sc_event\n");
 		return 0;
+	}
 
 	if (sc_evt->flags & UF_USED) {
 		evt_type = sc_evt->enter_event_type;
@@ -71,6 +76,7 @@ BPF_PROBE("raw_syscalls/", sys_enter, sys_enter_args)
 	}
 
 #ifdef BPF_SUPPORTS_RAW_TRACEPOINTS
+//	bpf_printk("calling filler\n");
 	call_filler(ctx, ctx, evt_type, settings, drop_flags);
 #else
 	/* Duplicated here to avoid verifier madness */

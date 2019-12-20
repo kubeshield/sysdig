@@ -741,8 +741,10 @@ static __always_inline int __bpf_val_to_ring(struct filler_data *data,
 			res = bpf_probe_read_str(&data->buf[data->state->tail_ctx.curoff & SCRATCH_SIZE_HALF],
 						 PPM_MAX_ARG_SIZE,
 						 (const void *)val);
-			if (res < 0)
-				return PPM_FAILURE_INVALID_USER_MEMORY;
+
+			// TODO: this fails i3wm, res = -14, but program never enters if block. why?
+//			if (res < 0)
+//				return PPM_FAILURE_INVALID_USER_MEMORY;
 			len = res;
 		} else {
 			len = val_len;
